@@ -11,8 +11,8 @@ import traceback
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
-import .report
-import .ui
+from . import report
+from . import ui
 
 def get_test_files(src_dir_name: str) -> Iterable[pathlib.Path]:
     src_dir: pathlib.Path = pathlib.Path(src_dir_name)
