@@ -51,21 +51,21 @@ def flatten_results(results: Iterable[Tuple[str, str]]) -> Iterable[str]:
         for r_ in r[1].split('\n'):
             yield r_
 
-def build_reports(reporter, ui, directory):
-    test_files: Iterable[pathlib.Path] = get_test_files(".")
+def build_reports(reporter, ui, src_dir, out_dir):
+    test_files: Iterable[pathlib.Path] = get_test_files(src_dir)
 
     for tf in test_files:
         results: Iterable[Tuple[str, str]] = execute_test_functions(tf)
         results_flat: Iterable[str] = flatten_results(results)
         r = reporter.report(results_flat)
-        ui.generate_ui(r, pathlib.Path(f"{directory}/{tf.name}.html"))
+        ui.generate_ui(r, pathlib.Path(f"{out_dir}/{tf.name}.html"))
     
     print("Reporting: done")
 
-def start_internal(reporter, ui, directory):
-    build_reports(reporter, ui, directory)
+def start_internal(reporter, ui, src_dir, out_dir):
+    build_reports(reporter, ui, src_dir, out_dir)
 
-    event_handler = MyHandler(reporter, ui, directory)
+    event_handler = MyHandler(reporter, ui, src_dir, out_dir)
     observer = Observer()
     observer.schedule(event_handler, path=".", recursive=False)
     observer.start()
@@ -76,19 +76,20 @@ def start_internal(reporter, ui, directory):
         observer.stop()
     observer.join()
 
-def start(directory):
-    start_internal(report, ui, directory)
+def start(src_dir, out_dir):
+    start_internal(report, ui, src_dir, out_dir)
 
 class MyHandler(FileSystemEventHandler):
-    def __init__(self, reporter, ui, directory):
+    def __init__(self, reporter, ui, src_dir, out_dir):
         self.reporter = reporter
         self.ui = ui
-        self.directory = directory
+        self.src_dir = src_dir
+        self.out_dir = out_dir
 
     def on_modified(self, event):
         print(f'event type: {event.event_type}  path : {event.src_path}')
         try:
-            build_reports(self.reporter, self.ui, self.directory)
+            build_reports(self.reporter, self.ui, self.src_dir, self.out_dir)
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
