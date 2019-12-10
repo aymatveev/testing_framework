@@ -51,21 +51,21 @@ def flatten_results(results: Iterable[Tuple[str, str]]) -> Iterable[str]:
         for r_ in r[1].split('\n'):
             yield r_
 
-def build_reports(reporter, ui):
+def build_reports(reporter, ui, directory):
     test_files: Iterable[pathlib.Path] = get_test_files(".")
 
     for tf in test_files:
         results: Iterable[Tuple[str, str]] = execute_test_functions(tf)
         results_flat: Iterable[str] = flatten_results(results)
         r = reporter.report(results_flat)
-        ui.generate_ui(r, pathlib.Path(f"../reports/{tf.name}.html"))
+        ui.generate_ui(r, pathlib.Path(f"{directory}/{tf.name}.html"))
     
     print("Reporting: done")
 
-def start_internal(reporter, ui):
-    build_reports(reporter, ui)
+def start_internal(reporter, ui, directory):
+    build_reports(reporter, ui, directory)
 
-    event_handler = MyHandler(reporter, ui)
+    event_handler = MyHandler(reporter, ui, directory)
     observer = Observer()
     observer.schedule(event_handler, path=".", recursive=False)
     observer.start()
@@ -76,18 +76,19 @@ def start_internal(reporter, ui):
         observer.stop()
     observer.join()
 
-def start():
-    start_internal(report, ui)
+def start(directory):
+    start_internal(report, ui, directory)
 
 class MyHandler(FileSystemEventHandler):
-    def __init__(self, reporter, ui):
+    def __init__(self, reporter, ui, directory):
         self.reporter = reporter
         self.ui = ui
+        self.directory = directory
 
     def on_modified(self, event):
         print(f'event type: {event.event_type}  path : {event.src_path}')
         try:
-            build_reports(self.reporter, self.ui)
+            build_reports(self.reporter, self.ui, self.directory)
         except Exception as e:
             print(e)
             traceback.print_exc(file=sys.stdout)
