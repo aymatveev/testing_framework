@@ -28,5 +28,5 @@ setup(
     packages=find_namespace_packages(where='src'),
     python_requires='>=3, <4',
     install_requires=['watchdog'],
-    extras_require={'dev': ['pytest']},
+    extras_require={'dev': ['pytest', 'mypy']},
 )
